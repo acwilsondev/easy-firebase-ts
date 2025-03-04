@@ -1,0 +1,1 @@
+# easy-firebase-ts
