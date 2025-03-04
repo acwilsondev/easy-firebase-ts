@@ -1,8 +1,10 @@
 import { initializeApp, FirebaseApp, FirebaseOptions } from 'firebase/app';
 import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 
 // Import interfaces for our services (to be implemented)
 import { FirestoreService } from '../firestore/firestore-service';
+import { FunctionsService } from '../functions/functions-service';
 
 /**
  * Configuration options for FirebaseManager
@@ -12,6 +14,11 @@ export interface FirebaseManagerConfig {
   firebaseOptions: FirebaseOptions;
   /** Whether to enable Firestore offline persistence */
   enablePersistence?: boolean;
+  /** Firebase Functions emulator configuration */
+  functionsEmulator?: {
+    host: string;
+    port: number;
+  };
 }
 
 /**
@@ -23,6 +30,7 @@ export class FirebaseManager {
   private app: FirebaseApp;
   private firestoreInstance: Firestore | null = null;
   private firestoreService: FirestoreService | null = null;
+  private functionsService: FunctionsService | null = null;
   private config: FirebaseManagerConfig;
   private initialized = false;
 
@@ -74,7 +82,23 @@ export class FirebaseManager {
     return this.firestoreService;
   }
 
-
+  /**
+   * Gets the FunctionsService instance
+   * 
+   * @returns The FunctionsService instance
+   */
+  public getFunctionsService(): FunctionsService {
+    if (!this.functionsService) {
+      // Create a new FunctionsService with the Firebase app instance
+      // and optional emulator configuration
+      this.functionsService = new FunctionsService(
+        this.app,
+        this.config.functionsEmulator
+      );
+    }
+    
+    return this.functionsService;
+  }
 
   /**
    * Cleans up all Firebase resources
@@ -91,6 +115,7 @@ export class FirebaseManager {
 
     this.firestoreInstance = null;
     this.firestoreService = null;
+    this.functionsService = null;
     this.initialized = false;
     
     console.log('Firebase resources cleaned up');

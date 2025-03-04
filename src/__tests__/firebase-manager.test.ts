@@ -1,5 +1,6 @@
 import { FirebaseManager, FirebaseManagerConfig } from '../core/firebase-manager';
 import { FirestoreService } from '../firestore/firestore-service';
+import { FunctionsService } from '../functions/functions-service';
 
 // Mock Firebase modules
 jest.mock('firebase/app', () => ({
@@ -93,11 +94,24 @@ describe('FirebaseManager', () => {
     it('should provide a FirestoreService instance', () => {
       const service = firebaseManager.getFirestoreService();
       expect(service).toBeDefined();
+      expect(service).toBeInstanceOf(FirestoreService);
+    });
+
+    it('should provide a FunctionsService instance', () => {
+      const service = firebaseManager.getFunctionsService();
+      expect(service).toBeDefined();
+      expect(service).toBeInstanceOf(FunctionsService);
     });
   
-    it('should cache service instances', () => {
+    it('should cache Firestore service instance', () => {
       const service1 = firebaseManager.getFirestoreService();
       const service2 = firebaseManager.getFirestoreService();
+      expect(service1).toBe(service2);
+    });
+
+    it('should cache Functions service instance', () => {
+      const service1 = firebaseManager.getFunctionsService();
+      const service2 = firebaseManager.getFunctionsService();
       expect(service1).toBe(service2);
     });
   });
@@ -105,9 +119,10 @@ describe('FirebaseManager', () => {
   describe('cleanup', () => {
     it('should reset all instances', async () => {
       // Get instances first
+      // Get instances first
       const firestoreInstance = firebaseManager.getFirestore();
       const firestoreService = firebaseManager.getFirestoreService();
-      
+      const functionsService = firebaseManager.getFunctionsService();
       // Then clean up
       await firebaseManager.cleanup();
       
@@ -118,6 +133,7 @@ describe('FirebaseManager', () => {
       const manager = firebaseManager as any;
       expect(manager.firestoreInstance).toBeNull();
       expect(manager.firestoreService).toBeNull();
+      expect(manager.functionsService).toBeNull();
     });
 
     it('should log cleanup message', async () => {
