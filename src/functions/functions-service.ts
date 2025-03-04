@@ -4,7 +4,7 @@ import {
   httpsCallable,
   HttpsCallableOptions,
   HttpsCallableResult,
-  connectFunctionsEmulator
+  connectFunctionsEmulator,
 } from 'firebase/functions';
 
 /**
@@ -22,14 +22,14 @@ export interface FunctionCallOptions {
  */
 export class FunctionsError extends Error {
   constructor(
-    message: string, 
-    public functionName?: string, 
-    public code?: string, 
-    public originalError?: Error
+    message: string,
+    public functionName?: string,
+    public code?: string,
+    public originalError?: Error,
   ) {
     super(message);
     this.name = 'FunctionsError';
-    
+
     // Ensures proper prototype chain for instanceof checks
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, FunctionsError);
@@ -39,7 +39,7 @@ export class FunctionsError extends Error {
 
 /**
  * Service for Firebase Cloud Functions operations
- * 
+ *
  * Provides typed methods for calling Firebase Functions with support for
  * custom regions and timeout options
  */
@@ -53,14 +53,11 @@ export class FunctionsService {
 
   /**
    * Creates a new FunctionsService instance
-   * 
+   *
    * @param app - The Firebase app instance
    * @param emulatorConfig - Optional emulator configuration
    */
-  constructor(
-    app: any, 
-    emulatorConfig?: { host: string; port: number }
-  ) {
+  constructor(app: any, emulatorConfig?: { host: string; port: number }) {
     if (!app) {
       throw new Error('FunctionsService requires a valid Firebase app instance');
     }
@@ -70,32 +67,28 @@ export class FunctionsService {
 
   /**
    * Gets a Functions instance for a specific region
-   * 
+   *
    * @param region - The region to get the Functions instance for
    * @returns The Functions instance for the specified region
    */
   private getFunctionsInstance(region: string = 'us-central1'): Functions {
     if (!this.functionsInstances.has(region)) {
       const functions = getFunctions(this.app, region);
-      
+
       // Connect to emulator if configured
       if (this.emulatorConfig) {
-        connectFunctionsEmulator(
-          functions, 
-          this.emulatorConfig.host, 
-          this.emulatorConfig.port
-        );
+        connectFunctionsEmulator(functions, this.emulatorConfig.host, this.emulatorConfig.port);
       }
-      
+
       this.functionsInstances.set(region, functions);
     }
-    
+
     return this.functionsInstances.get(region)!;
   }
 
   /**
    * Calls a Firebase Cloud Function with typed parameters and response
-   * 
+   *
    * @param functionName - Name of the function to call
    * @param params - Parameters to pass to the function
    * @param options - Optional configuration for the function call
@@ -104,39 +97,39 @@ export class FunctionsService {
   async callFunction<TParams, TResponse>(
     functionName: string,
     params: TParams,
-    options?: FunctionCallOptions
+    options?: FunctionCallOptions,
   ): Promise<TResponse> {
     try {
       const region = options?.region || 'us-central1';
       const functionsInstance = this.getFunctionsInstance(region);
-      
+
       const callableOptions: HttpsCallableOptions = {};
       if (options?.timeout) {
         callableOptions.timeout = options.timeout;
       }
-      
+
       const callable = httpsCallable<TParams, TResponse>(
         functionsInstance,
         functionName,
-        callableOptions
+        callableOptions,
       );
-      
+
       const result: HttpsCallableResult<TResponse> = await callable(params);
       return result.data;
     } catch (error: any) {
       console.error(`Error calling function ${functionName}:`, error);
-      
+
       const functionError = new FunctionsError(
         error.message || `Error calling function: ${functionName}`,
         functionName,
         error.code,
-        error
+        error,
       );
-      
+
       throw functionError;
     }
   }
-  
+
   /**
    * Cleans up resources used by the FunctionsService
    */
@@ -144,4 +137,3 @@ export class FunctionsService {
     this.functionsInstances.clear();
   }
 }
-

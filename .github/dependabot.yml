@@ -1,0 +1,27 @@
+# Dependabot configuration file
+# See documentation: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    reviewers:
+      - "owners"
+    versioning-strategy: "auto"
+    ignore:
+      # Ignore major version updates for these packages as they might require significant changes
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+

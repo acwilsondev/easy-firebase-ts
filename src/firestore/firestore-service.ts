@@ -12,7 +12,7 @@ import {
   DocumentReference,
   DocumentData,
   WithFieldValue,
-  SetOptions
+  SetOptions,
 } from 'firebase/firestore';
 
 /**
@@ -24,10 +24,15 @@ export type WithId<T> = T & { id: string };
  * Custom error class for Firestore-related errors
  */
 export class FirestoreError extends Error {
-  constructor(message: string, public path?: string, public code?: string, public originalError?: Error) {
+  constructor(
+    message: string,
+    public path?: string,
+    public code?: string,
+    public originalError?: Error,
+  ) {
     super(message);
     this.name = 'FirestoreError';
-    
+
     // Ensures proper prototype chain for instanceof checks
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, FirestoreError);
@@ -37,7 +42,7 @@ export class FirestoreError extends Error {
 
 /**
  * Service for Firestore database operations
- * 
+ *
  * Provides methods for CRUD operations and querying Firestore data
  */
 export class FirestoreService {
@@ -45,7 +50,7 @@ export class FirestoreService {
 
   /**
    * Creates a new FirestoreService instance
-   * 
+   *
    * @param firestore - The Firestore instance to use
    */
   constructor(firestore: Firestore) {
@@ -57,7 +62,7 @@ export class FirestoreService {
 
   /**
    * Gets a document from Firestore
-   * 
+   *
    * @param path - Path to the document (e.g., 'users/123')
    * @returns Promise resolving to the document data
    * @throws Error if document doesn't exist or there's a Firestore error
@@ -66,11 +71,11 @@ export class FirestoreService {
     try {
       const docRef = doc(this.firestore, path);
       const docSnap = await getDoc(docRef);
-      
+
       if (!docSnap.exists()) {
         throw new Error(`Document does not exist at path: ${path}`);
       }
-      
+
       return docSnap.data() as T;
     } catch (error) {
       console.error(`Error getting document at ${path}:`, error);
@@ -80,7 +85,7 @@ export class FirestoreService {
 
   /**
    * Creates or replaces a document in Firestore
-   * 
+   *
    * @param path - Path to the document (e.g., 'users/123')
    * @param data - Data to store in the document
    * @param options - Optional SetOptions (e.g., { merge: true })
@@ -102,7 +107,7 @@ export class FirestoreService {
 
   /**
    * Updates an existing document in Firestore
-   * 
+   *
    * @param path - Path to the document (e.g., 'users/123')
    * @param data - Fields to update in the document
    * @returns Promise that resolves when the operation is complete
@@ -119,7 +124,7 @@ export class FirestoreService {
 
   /**
    * Deletes a document from Firestore
-   * 
+   *
    * @param path - Path to the document (e.g., 'users/123')
    * @returns Promise that resolves when the operation is complete
    */
@@ -135,22 +140,25 @@ export class FirestoreService {
 
   /**
    * Queries a collection with the given constraints
-   * 
+   *
    * @param collectionPath - Path to the collection (e.g., 'users')
    * @param queryConstraints - Query constraints (e.g., where, orderBy, limit)
    * @returns Promise resolving to an array of documents matching the query
    */
-  async query<T>(collectionPath: string, ...queryConstraints: QueryConstraint[]): Promise<WithId<T>[]> {
+  async query<T>(
+    collectionPath: string,
+    ...queryConstraints: QueryConstraint[]
+  ): Promise<Array<WithId<T>>> {
     try {
       const collectionRef = collection(this.firestore, collectionPath);
       const q = firestoreQuery(collectionRef, ...queryConstraints);
       const querySnapshot = await getDocs(q);
-      
-      const results: WithId<T>[] = [];
-      querySnapshot.forEach((doc) => {
+
+      const results: Array<WithId<T>> = [];
+      querySnapshot.forEach(doc => {
         results.push({ id: doc.id, ...doc.data() } as WithId<T>);
       });
-      
+
       return results;
     } catch (error) {
       console.error(`Error querying collection ${collectionPath}:`, error);
@@ -158,4 +166,3 @@ export class FirestoreService {
     }
   }
 }
-

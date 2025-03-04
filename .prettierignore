@@ -1,0 +1,29 @@
+# Build output
+dist/
+build/
+lib/
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.cache/
+.DS_Store
+.env
+.env.*
+.idea/
+.vscode/
+*.log
+*.tsbuildinfo
+
+# Generated files
+generated/
+*.generated.*
+

@@ -1,6 +1,7 @@
 import { FirebaseManager, FirebaseManagerConfig } from '../core/firebase-manager';
 import { FirestoreService } from '../firestore/firestore-service';
 import { FunctionsService } from '../functions/functions-service';
+import { PubSubService } from '../pubsub/pubsub-service';
 
 // Mock Firebase modules
 jest.mock('firebase/app', () => ({
@@ -16,6 +17,19 @@ jest.mock('firebase/firestore', () => ({
 jest.mock('firebase/functions', () => ({
   getFunctions: jest.fn().mockReturnValue({ id: 'mock-functions' }),
   httpsCallable: jest.fn(),
+}));
+
+// Mock PubSub
+jest.mock('@google-cloud/pubsub', () => ({
+  PubSub: jest.fn().mockImplementation(() => ({
+    topic: jest.fn().mockReturnValue({
+      publish: jest.fn().mockResolvedValue(['mock-message-id']),
+      subscription: jest.fn().mockReturnValue({
+        on: jest.fn(),
+        removeListener: jest.fn(),
+      }),
+    }),
+  })),
 }));
 
 // Mock Firebase imports
@@ -40,7 +54,7 @@ describe('FirebaseManager', () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
-    
+
     // Create a new instance for each test
     firebaseManager = new FirebaseManager(mockConfig);
   });
@@ -55,7 +69,6 @@ describe('FirebaseManager', () => {
       expect(initializeApp).toHaveBeenCalledWith(mockConfig.firebaseOptions);
       expect(firebaseManager.isInitialized()).toBe(true);
     });
-
   });
 
   describe('getFirestore', () => {
@@ -68,7 +81,7 @@ describe('FirebaseManager', () => {
     it('should not enable persistence when not specified in config', () => {
       const config = { ...mockConfig, enablePersistence: false };
       const manager = new FirebaseManager(config);
-      
+
       manager.getFirestore();
       expect(enableIndexedDbPersistence).not.toHaveBeenCalled();
     });
@@ -76,7 +89,7 @@ describe('FirebaseManager', () => {
     it('should enable persistence when specified in config', () => {
       const config = { ...mockConfig, enablePersistence: true };
       const manager = new FirebaseManager(config);
-      
+
       manager.getFirestore();
       expect(enableIndexedDbPersistence).toHaveBeenCalled();
     });
@@ -84,7 +97,7 @@ describe('FirebaseManager', () => {
     it('should cache the Firestore instance', () => {
       const instance1 = firebaseManager.getFirestore();
       const instance2 = firebaseManager.getFirestore();
-      
+
       expect(getFirestore).toHaveBeenCalledTimes(1);
       expect(instance1).toBe(instance2);
     });
@@ -102,7 +115,7 @@ describe('FirebaseManager', () => {
       expect(service).toBeDefined();
       expect(service).toBeInstanceOf(FunctionsService);
     });
-  
+
     it('should cache Firestore service instance', () => {
       const service1 = firebaseManager.getFirestoreService();
       const service2 = firebaseManager.getFirestoreService();
@@ -114,6 +127,18 @@ describe('FirebaseManager', () => {
       const service2 = firebaseManager.getFunctionsService();
       expect(service1).toBe(service2);
     });
+
+    it('should provide a PubSubService instance', () => {
+      const service = firebaseManager.getPubSubService();
+      expect(service).toBeDefined();
+      expect(service).toBeInstanceOf(PubSubService);
+    });
+
+    it('should cache PubSub service instance', () => {
+      const service1 = firebaseManager.getPubSubService();
+      const service2 = firebaseManager.getPubSubService();
+      expect(service1).toBe(service2);
+    });
   });
 
   describe('cleanup', () => {
@@ -123,30 +148,31 @@ describe('FirebaseManager', () => {
       const firestoreInstance = firebaseManager.getFirestore();
       const firestoreService = firebaseManager.getFirestoreService();
       const functionsService = firebaseManager.getFunctionsService();
+      const pubSubService = firebaseManager.getPubSubService();
       // Then clean up
       await firebaseManager.cleanup();
-      
+
       // Check initialization status
       expect(firebaseManager.isInitialized()).toBe(false);
-      
+
       // Check that instances are reset (implementation detail, using any to access private properties)
       const manager = firebaseManager as any;
       expect(manager.firestoreInstance).toBeNull();
       expect(manager.firestoreService).toBeNull();
       expect(manager.functionsService).toBeNull();
+      expect(manager.pubSubService).toBeNull();
     });
 
     it('should log cleanup message', async () => {
       // Spy on console.log
       const consoleSpy = jest.spyOn(console, 'log');
-      
+
       await firebaseManager.cleanup();
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('Firebase resources cleaned up');
-      
+
       // Restore console.log
       consoleSpy.mockRestore();
     });
   });
 });
-

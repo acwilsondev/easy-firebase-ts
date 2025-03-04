@@ -11,11 +11,7 @@ jest.mock('firebase/functions', () => {
 });
 
 // Import mocked Firebase functions
-import {
-  getFunctions,
-  httpsCallable,
-  connectFunctionsEmulator
-} from 'firebase/functions';
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 
 describe('FunctionsService', () => {
   let functionsService: FunctionsService;
@@ -40,7 +36,7 @@ describe('FunctionsService', () => {
 
     // Mock callable result
     mockCallableResult = {
-      data: { message: 'Success response' }
+      data: { message: 'Success response' },
     } as unknown as jest.Mocked<HttpsCallableResult<any>>;
 
     // Mock callable function
@@ -63,7 +59,7 @@ describe('FunctionsService', () => {
 
     it('should throw an error if Firebase app instance is not provided', () => {
       expect(() => new FunctionsService(undefined as any)).toThrow(
-        'FunctionsService requires a valid Firebase app instance'
+        'FunctionsService requires a valid Firebase app instance',
       );
     });
 
@@ -79,7 +75,7 @@ describe('FunctionsService', () => {
       const params = { name: 'Test User' };
       const result = await functionsService.callFunction<typeof params, { message: string }>(
         'helloWorld',
-        params
+        params,
       );
 
       expect(getFunctions).toHaveBeenCalledWith(mockApp, 'us-central1');
@@ -95,7 +91,7 @@ describe('FunctionsService', () => {
       await functionsService.callFunction<typeof params, { message: string }>(
         'helloWorld',
         params,
-        options
+        options,
       );
 
       expect(getFunctions).toHaveBeenCalledWith(mockApp, 'europe-west1');
@@ -108,39 +104,25 @@ describe('FunctionsService', () => {
       await functionsService.callFunction<typeof params, { message: string }>(
         'helloWorld',
         params,
-        options
+        options,
       );
 
       expect(httpsCallable).toHaveBeenCalledWith(mockFunctions, 'helloWorld', { timeout: 30000 });
     });
 
     it('should reuse Functions instances for the same region', async () => {
-      await functionsService.callFunction<{}, {}>(
-        'function1',
-        {}
-      );
+      await functionsService.callFunction<{}, {}>('function1', {});
 
-      await functionsService.callFunction<{}, {}>(
-        'function2',
-        {}
-      );
+      await functionsService.callFunction<{}, {}>('function2', {});
 
       // getFunctions should only be called once for the default region
       expect(getFunctions).toHaveBeenCalledTimes(1);
     });
 
     it('should create new Functions instances for different regions', async () => {
-      await functionsService.callFunction<{}, {}>(
-        'function1',
-        {},
-        { region: 'us-central1' }
-      );
+      await functionsService.callFunction<{}, {}>('function1', {}, { region: 'us-central1' });
 
-      await functionsService.callFunction<{}, {}>(
-        'function2',
-        {},
-        { region: 'europe-west1' }
-      );
+      await functionsService.callFunction<{}, {}>('function2', {}, { region: 'europe-west1' });
 
       // getFunctions should be called twice, once for each region
       expect(getFunctions).toHaveBeenCalledTimes(2);
@@ -151,22 +133,24 @@ describe('FunctionsService', () => {
     it('should throw a FunctionsError on function call error', async () => {
       const error = new Error('Function execution failed');
       (error as any).code = 'functions/invalid-argument';
-      
+
       // Reset the mock to ensure it's not returning the success response
       mockCallable.mockReset();
       // Mock reject for all calls to this test
       mockCallable.mockRejectedValue(error);
 
-      await expect(functionsService.callFunction<{}, {}>('errorFunction', {}))
-        .rejects.toThrow(FunctionsError);
-      
-      await expect(functionsService.callFunction<{}, {}>('errorFunction', {}))
-        .rejects.toMatchObject({
-          name: 'FunctionsError',
-          message: 'Function execution failed',
-          functionName: 'errorFunction',
-          code: 'functions/invalid-argument'
-        });
+      await expect(functionsService.callFunction<{}, {}>('errorFunction', {})).rejects.toThrow(
+        FunctionsError,
+      );
+
+      await expect(
+        functionsService.callFunction<{}, {}>('errorFunction', {}),
+      ).rejects.toMatchObject({
+        name: 'FunctionsError',
+        message: 'Function execution failed',
+        functionName: 'errorFunction',
+        code: 'functions/invalid-argument',
+      });
     });
   });
 
@@ -174,19 +158,15 @@ describe('FunctionsService', () => {
     it('should connect to the emulator when configured', async () => {
       const emulatorConfig = { host: 'localhost', port: 5001 };
       const emulatorService = new FunctionsService(mockApp, emulatorConfig);
-      
+
       await emulatorService.callFunction<{}, {}>('emulatorFunction', {});
-      
-      expect(connectFunctionsEmulator).toHaveBeenCalledWith(
-        mockFunctions,
-        'localhost',
-        5001
-      );
+
+      expect(connectFunctionsEmulator).toHaveBeenCalledWith(mockFunctions, 'localhost', 5001);
     });
 
     it('should not connect to the emulator when not configured', async () => {
       await functionsService.callFunction<{}, {}>('regularFunction', {});
-      
+
       expect(connectFunctionsEmulator).not.toHaveBeenCalled();
     });
   });
@@ -196,15 +176,14 @@ describe('FunctionsService', () => {
       // Call functions with different regions to populate the instances map
       await functionsService.callFunction<{}, {}>('function1', {}, { region: 'us-central1' });
       await functionsService.callFunction<{}, {}>('function2', {}, { region: 'europe-west1' });
-      
+
       functionsService.cleanup();
-      
+
       // Call a function again, which should recreate the Functions instance
       await functionsService.callFunction<{}, {}>('function1', {});
-      
+
       // getFunctions should now be called 3 times in total
       expect(getFunctions).toHaveBeenCalledTimes(3);
     });
   });
 });
-
