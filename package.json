@@ -1,0 +1,48 @@
+{
+  "name": "easy-firebase-ts",
+  "version": "1.0.0",
+  "description": "A TypeScript library that simplifies Firebase usage with type-safe approaches",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint \"src/**/*.ts\"",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acwilsondev/easy-firebase-ts.git"
+  },
+  "keywords": ["firebase", "typescript", "firestore", "cloud-functions", "pubsub", "type-safe"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "files": ["dist"],
+  "bugs": {
+    "url": "https://github.com/acwilsondev/easy-firebase-ts/issues"
+  },
+  "homepage": "https://github.com/acwilsondev/easy-firebase-ts#readme",
+  "engines": {
+    "node": ">=14"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^3.7.1",
+    "firebase-admin": "^11.10.1"
+  },
+  "peerDependencies": {
+    "firebase": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.4",
+    "@types/node": "^20.5.6",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "eslint": "^8.47.0",
+    "jest": "^29.6.4",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  }
+}
