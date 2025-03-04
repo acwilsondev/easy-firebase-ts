@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/acwilsondev/easy-firebase-ts.git"
   },
-  "keywords": ["firebase", "typescript", "firestore", "cloud-functions", "pubsub", "type-safe"],
+  "keywords": ["firebase", "typescript", "firestore", "type-safe"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -28,7 +28,6 @@
     "node": ">=14"
   },
   "dependencies": {
-    "@google-cloud/pubsub": "^3.7.1",
     "firebase-admin": "^11.10.1"
   },
   "peerDependencies": {

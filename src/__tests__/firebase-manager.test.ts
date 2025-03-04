@@ -1,7 +1,5 @@
 import { FirebaseManager, FirebaseManagerConfig } from '../core/firebase-manager';
 import { FirestoreService } from '../firestore/firestore-service';
-import { FunctionsService } from '../functions/functions-service';
-import { PubSubService } from '../pubsub/pubsub-service';
 
 // Mock Firebase modules
 jest.mock('firebase/app', () => ({
@@ -34,7 +32,6 @@ describe('FirebaseManager', () => {
       appId: 'test-app-id',
     },
     enablePersistence: false,
-    functionsRegion: 'us-central1',
   };
 
   let firebaseManager: FirebaseManager;
@@ -58,11 +55,6 @@ describe('FirebaseManager', () => {
       expect(firebaseManager.isInitialized()).toBe(true);
     });
 
-    it('should store the provided configuration', () => {
-      // We can test this by checking if functionsRegion is used when getting functions
-      firebaseManager.getFunctions();
-      expect(getFunctions).toHaveBeenCalledWith(expect.anything(), mockConfig.functionsRegion);
-    });
   });
 
   describe('getFirestore', () => {
@@ -97,52 +89,12 @@ describe('FirebaseManager', () => {
     });
   });
 
-  describe('getFunctions', () => {
-    it('should return a Functions instance', () => {
-      const functionsInstance = firebaseManager.getFunctions();
-      expect(getFunctions).toHaveBeenCalled();
-      expect(functionsInstance).toBeDefined();
-    });
-
-    it('should use the specified region when provided', () => {
-      firebaseManager.getFunctions();
-      expect(getFunctions).toHaveBeenCalledWith(expect.anything(), mockConfig.functionsRegion);
-    });
-
-    it('should not specify region when not provided in config', () => {
-      const config = { ...mockConfig, functionsRegion: undefined };
-      const manager = new FirebaseManager(config);
-      
-      manager.getFunctions();
-      expect(getFunctions).toHaveBeenCalledWith(expect.anything());
-      expect(getFunctions).not.toHaveBeenCalledWith(expect.anything(), expect.anything());
-    });
-
-    it('should cache the Functions instance', () => {
-      const instance1 = firebaseManager.getFunctions();
-      const instance2 = firebaseManager.getFunctions();
-      
-      expect(getFunctions).toHaveBeenCalledTimes(1);
-      expect(instance1).toBe(instance2);
-    });
-  });
-
   describe('service instances', () => {
     it('should provide a FirestoreService instance', () => {
       const service = firebaseManager.getFirestoreService();
       expect(service).toBeDefined();
     });
-
-    it('should provide a FunctionsService instance', () => {
-      const service = firebaseManager.getFunctionsService();
-      expect(service).toBeDefined();
-    });
-
-    it('should provide a PubSubService instance', () => {
-      const service = firebaseManager.getPubSubService();
-      expect(service).toBeDefined();
-    });
-
+  
     it('should cache service instances', () => {
       const service1 = firebaseManager.getFirestoreService();
       const service2 = firebaseManager.getFirestoreService();
@@ -154,10 +106,7 @@ describe('FirebaseManager', () => {
     it('should reset all instances', async () => {
       // Get instances first
       const firestoreInstance = firebaseManager.getFirestore();
-      const functionsInstance = firebaseManager.getFunctions();
       const firestoreService = firebaseManager.getFirestoreService();
-      const functionsService = firebaseManager.getFunctionsService();
-      const pubSubService = firebaseManager.getPubSubService();
       
       // Then clean up
       await firebaseManager.cleanup();
@@ -168,10 +117,7 @@ describe('FirebaseManager', () => {
       // Check that instances are reset (implementation detail, using any to access private properties)
       const manager = firebaseManager as any;
       expect(manager.firestoreInstance).toBeNull();
-      expect(manager.functionsInstance).toBeNull();
       expect(manager.firestoreService).toBeNull();
-      expect(manager.functionsService).toBeNull();
-      expect(manager.pubSubService).toBeNull();
     });
 
     it('should log cleanup message', async () => {

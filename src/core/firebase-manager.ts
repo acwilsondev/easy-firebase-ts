@@ -1,11 +1,8 @@
 import { initializeApp, FirebaseApp, FirebaseOptions } from 'firebase/app';
 import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 
 // Import interfaces for our services (to be implemented)
 import { FirestoreService } from '../firestore/firestore-service';
-import { FunctionsService } from '../functions/functions-service';
-import { PubSubService } from '../pubsub/pubsub-service';
 
 /**
  * Configuration options for FirebaseManager
@@ -15,8 +12,6 @@ export interface FirebaseManagerConfig {
   firebaseOptions: FirebaseOptions;
   /** Whether to enable Firestore offline persistence */
   enablePersistence?: boolean;
-  /** Default region for Cloud Functions */
-  functionsRegion?: string;
 }
 
 /**
@@ -27,10 +22,7 @@ export interface FirebaseManagerConfig {
 export class FirebaseManager {
   private app: FirebaseApp;
   private firestoreInstance: Firestore | null = null;
-  private functionsInstance: Functions | null = null;
   private firestoreService: FirestoreService | null = null;
-  private functionsService: FunctionsService | null = null;
-  private pubSubService: PubSubService | null = null;
   private config: FirebaseManagerConfig;
   private initialized = false;
 
@@ -66,20 +58,6 @@ export class FirebaseManager {
     return this.firestoreInstance;
   }
 
-  /**
-   * Gets the Functions instance
-   * 
-   * @returns The Functions instance
-   */
-  public getFunctions(): Functions {
-    if (!this.functionsInstance) {
-      this.functionsInstance = this.config.functionsRegion
-        ? getFunctions(this.app, this.config.functionsRegion)
-        : getFunctions(this.app);
-    }
-    
-    return this.functionsInstance;
-  }
 
   /**
    * Gets the FirestoreService instance
@@ -88,40 +66,15 @@ export class FirebaseManager {
    */
   public getFirestoreService(): FirestoreService {
     if (!this.firestoreService) {
-      // Implementation will be added later
-      this.firestoreService = {} as FirestoreService;
+      // Get the Firestore instance and create a new FirestoreService
+      const firestoreInstance = this.getFirestore();
+      this.firestoreService = new FirestoreService(firestoreInstance);
     }
     
     return this.firestoreService;
   }
 
-  /**
-   * Gets the FunctionsService instance
-   * 
-   * @returns The FunctionsService instance
-   */
-  public getFunctionsService(): FunctionsService {
-    if (!this.functionsService) {
-      // Implementation will be added later
-      this.functionsService = {} as FunctionsService;
-    }
-    
-    return this.functionsService;
-  }
 
-  /**
-   * Gets the PubSubService instance
-   * 
-   * @returns The PubSubService instance
-   */
-  public getPubSubService(): PubSubService {
-    if (!this.pubSubService) {
-      // Implementation will be added later
-      this.pubSubService = {} as PubSubService;
-    }
-    
-    return this.pubSubService;
-  }
 
   /**
    * Cleans up all Firebase resources
@@ -137,10 +90,7 @@ export class FirebaseManager {
     // - Terminating the Firebase app
 
     this.firestoreInstance = null;
-    this.functionsInstance = null;
     this.firestoreService = null;
-    this.functionsService = null;
-    this.pubSubService = null;
     this.initialized = false;
     
     console.log('Firebase resources cleaned up');

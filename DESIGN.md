@@ -69,11 +69,7 @@ class FirebaseManager {
 Manages Firestore database operations:
 
 - Document CRUD operations
-- Collections management
 - Queries and filtering
-- Real-time data subscription
-- Batch operations and transactions
-- Data validation
 
 ```typescript
 class FirestoreService {

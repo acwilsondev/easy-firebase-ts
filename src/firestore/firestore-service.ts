@@ -1,367 +1,160 @@
 import {
   Firestore,
-  DocumentData,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query as firestoreQuery,
+  getDocs,
+  QueryConstraint,
   DocumentReference,
-  DocumentSnapshot,
-  Query,
-  QuerySnapshot,
-  CollectionReference,
-  WriteBatch,
-  Transaction,
-  UpdateData,
-  SetOptions,
-  WhereFilterOp,
-  OrderByDirection,
-  FieldPath,
-  SnapshotOptions,
-  Unsubscribe,
+  DocumentData,
+  WithFieldValue,
+  SetOptions
 } from 'firebase/firestore';
 
 /**
- * Custom error class for Firestore operations
- */
-export class FirestoreError extends Error {
-  constructor(
-    message: string,
-    public readonly code: string,
-    public readonly operation: string,
-    public readonly path?: string,
-    public readonly originalError?: Error
-  ) {
-    super(message);
-    this.name = 'FirestoreError';
-    Object.setPrototypeOf(this, FirestoreError.prototype);
-  }
-}
-
-/**
- * Type for document data with an id field
+ * Adds an 'id' field to any type
  */
 export type WithId<T> = T & { id: string };
 
 /**
- * Service class for Firestore operations with type safety and error handling
+ * Custom error class for Firestore-related errors
+ */
+export class FirestoreError extends Error {
+  constructor(message: string, public path?: string, public code?: string, public originalError?: Error) {
+    super(message);
+    this.name = 'FirestoreError';
+    
+    // Ensures proper prototype chain for instanceof checks
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FirestoreError);
+    }
+  }
+}
+
+/**
+ * Service for Firestore database operations
+ * 
+ * Provides methods for CRUD operations and querying Firestore data
  */
 export class FirestoreService {
-  constructor(private readonly firestore: Firestore) {}
+  private firestore: Firestore;
 
   /**
-   * Creates a document in a collection
-   * @param collectionPath Path to the collection
-   * @param data Data to be saved
-   * @param options Set options
-   * @returns Document reference with id
+   * Creates a new FirestoreService instance
+   * 
+   * @param firestore - The Firestore instance to use
    */
-  async create<T extends DocumentData>(
-    collectionPath: string,
-    data: T,
-    options?: SetOptions
-  ): Promise<WithId<T>> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to create document in ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'create',
-        collectionPath,
-        error
-      );
+  constructor(firestore: Firestore) {
+    if (!firestore) {
+      throw new Error('FirestoreService requires a valid Firestore instance');
     }
+    this.firestore = firestore;
   }
 
   /**
-   * Reads a document by id
-   * @param collectionPath Path to the collection
-   * @param id Document id
-   * @returns Document data with id or null if not found
+   * Gets a document from Firestore
+   * 
+   * @param path - Path to the document (e.g., 'users/123')
+   * @returns Promise resolving to the document data
+   * @throws Error if document doesn't exist or there's a Firestore error
    */
-  async read<T extends DocumentData>(
-    collectionPath: string,
-    id: string
-  ): Promise<WithId<T> | null> {
+  async getDocument<T>(path: string): Promise<T> {
     try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to read document ${id} from ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'read',
-        `${collectionPath}/${id}`,
-        error
-      );
-    }
-  }
-
-  /**
-   * Updates a document by id
-   * @param collectionPath Path to the collection
-   * @param id Document id
-   * @param data Data to update
-   * @returns Updated document data with id
-   */
-  async update<T extends DocumentData>(
-    collectionPath: string,
-    id: string,
-    data: UpdateData<T>
-  ): Promise<WithId<T>> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to update document ${id} in ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'update',
-        `${collectionPath}/${id}`,
-        error
-      );
-    }
-  }
-
-  /**
-   * Deletes a document by id
-   * @param collectionPath Path to the collection
-   * @param id Document id
-   * @returns Promise resolving when deletion is complete
-   */
-  async delete(collectionPath: string, id: string): Promise<void> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to delete document ${id} from ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'delete',
-        `${collectionPath}/${id}`,
-        error
-      );
-    }
-  }
-
-  /**
-   * Queries a collection with filters
-   * @param collectionPath Path to the collection
-   * @param conditions Array of filter conditions [field, operator, value]
-   * @param orderByField Optional field to order results by
-   * @param direction Optional direction to order results in
-   * @param limit Optional maximum number of results to return
-   * @returns Array of document data with ids
-   */
-  async query<T extends DocumentData>(
-    collectionPath: string,
-    conditions: [string | FieldPath, WhereFilterOp, any][],
-    orderByField?: string | FieldPath,
-    direction?: OrderByDirection,
-    limit?: number
-  ): Promise<WithId<T>[]> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to query collection ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'query',
-        collectionPath,
-        error
-      );
-    }
-  }
-
-  /**
-   * Gets all documents in a collection
-   * @param collectionPath Path to the collection
-   * @returns Array of document data with ids
-   */
-  async getAll<T extends DocumentData>(collectionPath: string): Promise<WithId<T>[]> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to get all documents from ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'getAll',
-        collectionPath,
-        error
-      );
-    }
-  }
-
-  /**
-   * Subscribes to real-time updates on a document
-   * @param collectionPath Path to the collection
-   * @param id Document id
-   * @param onSnapshot Callback function for snapshot updates
-   * @param onError Optional callback function for errors
-   * @returns Unsubscribe function
-   */
-  subscribeToDocument<T extends DocumentData>(
-    collectionPath: string,
-    id: string,
-    onSnapshot: (data: WithId<T> | null) => void,
-    onError?: (error: FirestoreError) => void
-  ): Unsubscribe {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      const firestoreError = new FirestoreError(
-        `Failed to subscribe to document ${id} from ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'subscribeToDocument',
-        `${collectionPath}/${id}`,
-        error
-      );
+      const docRef = doc(this.firestore, path);
+      const docSnap = await getDoc(docRef);
       
-      if (onError) {
-        onError(firestoreError);
-      } else {
-        console.error(firestoreError);
+      if (!docSnap.exists()) {
+        throw new Error(`Document does not exist at path: ${path}`);
       }
       
-      // Return a no-op unsubscribe function
-      return () => {};
+      return docSnap.data() as T;
+    } catch (error) {
+      console.error(`Error getting document at ${path}:`, error);
+      throw error;
     }
   }
 
   /**
-   * Subscribes to real-time updates on a query
-   * @param collectionPath Path to the collection
-   * @param conditions Array of filter conditions [field, operator, value]
-   * @param onSnapshot Callback function for snapshot updates
-   * @param onError Optional callback function for errors
-   * @param orderByField Optional field to order results by
-   * @param direction Optional direction to order results in
-   * @param limit Optional maximum number of results to return
-   * @returns Unsubscribe function
+   * Creates or replaces a document in Firestore
+   * 
+   * @param path - Path to the document (e.g., 'users/123')
+   * @param data - Data to store in the document
+   * @param options - Optional SetOptions (e.g., { merge: true })
+   * @returns Promise that resolves when the operation is complete
    */
-  subscribeToQuery<T extends DocumentData>(
-    collectionPath: string,
-    conditions: [string | FieldPath, WhereFilterOp, any][],
-    onSnapshot: (data: WithId<T>[]) => void,
-    onError?: (error: FirestoreError) => void,
-    orderByField?: string | FieldPath,
-    direction?: OrderByDirection,
-    limit?: number
-  ): Unsubscribe {
+  async setDocument<T>(path: string, data: T, options?: SetOptions): Promise<void> {
     try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      const firestoreError = new FirestoreError(
-        `Failed to subscribe to query on ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'subscribeToQuery',
-        collectionPath,
-        error
-      );
-      
-      if (onError) {
-        onError(firestoreError);
+      const docRef = doc(this.firestore, path);
+      if (options) {
+        await setDoc(docRef, data as WithFieldValue<DocumentData>, options);
       } else {
-        console.error(firestoreError);
+        await setDoc(docRef, data as WithFieldValue<DocumentData>);
       }
+    } catch (error) {
+      console.error(`Error setting document at ${path}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Updates an existing document in Firestore
+   * 
+   * @param path - Path to the document (e.g., 'users/123')
+   * @param data - Fields to update in the document
+   * @returns Promise that resolves when the operation is complete
+   */
+  async updateDocument(path: string, data: Partial<any>): Promise<void> {
+    try {
+      const docRef = doc(this.firestore, path);
+      await updateDoc(docRef, data);
+    } catch (error) {
+      console.error(`Error updating document at ${path}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a document from Firestore
+   * 
+   * @param path - Path to the document (e.g., 'users/123')
+   * @returns Promise that resolves when the operation is complete
+   */
+  async deleteDocument(path: string): Promise<void> {
+    try {
+      const docRef = doc(this.firestore, path);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error(`Error deleting document at ${path}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Queries a collection with the given constraints
+   * 
+   * @param collectionPath - Path to the collection (e.g., 'users')
+   * @param queryConstraints - Query constraints (e.g., where, orderBy, limit)
+   * @returns Promise resolving to an array of documents matching the query
+   */
+  async query<T>(collectionPath: string, ...queryConstraints: QueryConstraint[]): Promise<WithId<T>[]> {
+    try {
+      const collectionRef = collection(this.firestore, collectionPath);
+      const q = firestoreQuery(collectionRef, ...queryConstraints);
+      const querySnapshot = await getDocs(q);
       
-      // Return a no-op unsubscribe function
-      return () => {};
-    }
-  }
-
-  /**
-   * Starts a new batch operation
-   * @returns Batch wrapper with methods to add operations
-   */
-  batch(): {
-    create: <T extends DocumentData>(collectionPath: string, data: T, options?: SetOptions) => void;
-    set: <T extends DocumentData>(collectionPath: string, id: string, data: T, options?: SetOptions) => void;
-    update: <T extends DocumentData>(collectionPath: string, id: string, data: UpdateData<T>) => void;
-    delete: (collectionPath: string, id: string) => void;
-    commit: () => Promise<void>;
-  } {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to create batch: ${error.message}`,
-        error.code || 'unknown',
-        'batch',
-        undefined,
-        error
-      );
-    }
-  }
-
-  /**
-   * Runs a transaction with the provided handler function
-   * @param updateFunction Function to execute within the transaction
-   * @returns Result of the transaction function
-   */
-  async runTransaction<T>(
-    updateFunction: (transaction: Transaction) => Promise<T>
-  ): Promise<T> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Transaction failed: ${error.message}`,
-        error.code || 'unknown',
-        'runTransaction',
-        undefined,
-        error
-      );
-    }
-  }
-
-  /**
-   * Gets a document reference
-   * @param collectionPath Path to the collection
-   * @param id Document id
-   * @returns Document reference
-   */
-  getDocRef<T extends DocumentData>(
-    collectionPath: string,
-    id: string
-  ): DocumentReference<T> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to get document reference for ${collectionPath}/${id}: ${error.message}`,
-        error.code || 'unknown',
-        'getDocRef',
-        `${collectionPath}/${id}`,
-        error
-      );
-    }
-  }
-
-  /**
-   * Gets a collection reference
-   * @param collectionPath Path to the collection
-   * @returns Collection reference
-   */
-  getCollectionRef<T extends DocumentData>(
-    collectionPath: string
-  ): CollectionReference<T> {
-    try {
-      // Implementation will go here
-      throw new Error('Method not implemented');
-    } catch (error: any) {
-      throw new FirestoreError(
-        `Failed to get collection reference for ${collectionPath}: ${error.message}`,
-        error.code || 'unknown',
-        'getCollectionRef',
-        collectionPath,
-        error
-      );
+      const results: WithId<T>[] = [];
+      querySnapshot.forEach((doc) => {
+        results.push({ id: doc.id, ...doc.data() } as WithId<T>);
+      });
+      
+      return results;
+    } catch (error) {
+      console.error(`Error querying collection ${collectionPath}:`, error);
+      throw error;
     }
   }
 }
